@@ -42,5 +42,5 @@ def verificar_estructura()-> None:
     #asegura que el directorio de la base de datos existe
 
 def configuracion_pragmas(conn:sqlite3.Connection)->None:
-    conn.execute("PRAGMA foreign_key = ON;")
-    conn.execute("PRAGMA journal_mode = WALL;")
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode = WAL;")
