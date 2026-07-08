@@ -38,7 +38,7 @@ def insertar_tabla(connection,tabla,ruta_csv):
                 insertados+=1
             except sqlite3.IntegrityError as e:
                 reboto+=1
-                print(f"fila rechazada:{valores} - {e}")
+                print(f"fila rechazada (IntegrityError): {valores} -  Motivo: {e}")
             except sqlite3.OperationalError as e:
                 print("Error de Operación: ",e)
                 print(f"carga detenida {tabla}.")
