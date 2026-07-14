@@ -92,7 +92,7 @@ WHERE unit_price < 0
 
 /* 4. AUDITORÍA DE PEDIDOS ===================================== */
 
--- 4.1 Últimos pedidos cancelados
+-- 4.A Últimos pedidos cancelados
 SELECT
     o.order_id,
     o.order_datetime,
@@ -106,12 +106,7 @@ WHERE o.current_status = 'cancelled'
 ORDER BY o.order_datetime DESC
 LIMIT 12;
 
--- ------------------------------------------------------------
--- 4.2 Detalle completo de un pedido específico
--- ------------------------------------------------------------
--- Propósito: Muestra el detalle de un pedido específico
--- (ejemplo con order_id = 26276).
--- ------------------------------------------------------------
+-- 4.B Detalle completo de un pedido específico
 SELECT
     o.order_id,
     o.order_datetime,
@@ -123,16 +118,8 @@ JOIN customers c
     ON o.customer_id = c.customer_id
 WHERE o.order_id = 26276;
 
-/* ============================================================
-    5. PRODUCTOS Y CATÁLOGO
-    ============================================================ */
-
--- ------------------------------------------------------------
--- 5.1 Productos sin movimiento comercial
--- ------------------------------------------------------------
--- Propósito: Identifica productos que nunca han sido vendidos
--- (no aparecen en order_items).
--- ------------------------------------------------------------
+/* 5. PRODUCTOS Y CATÁLOGO =============================== */
+-- 5.A Productos sin movimiento comercial
 SELECT
     p.product_id,
     p.product_name,
@@ -142,22 +129,16 @@ LEFT JOIN order_items oi
     ON p.product_id = oi.product_id
 WHERE oi.product_id IS NULL;
 
-/* ============================================================
-    6. SEGUIMIENTO DE PAGOS
-    ============================================================ */
+/* 6. SEGUIMIENTO DE PAGOS====================== */
 
--- ------------------------------------------------------------
--- 6.1 Pagos en efectivo pendientes
--- ------------------------------------------------------------
--- Propósito: Muestra pagos en efectivo que aún están pendientes
--- para seguimiento y conciliación.
--- ------------------------------------------------------------
+-- 6.A Pagos en efectivo pendientes
 SELECT
     c.full_name,
     o.order_id,
     o.current_status,
     p.method,
-    p.amount
+    p.amount,
+    p.payment_status
 FROM customers c
 JOIN orders o
     ON c.customer_id = o.customer_id
