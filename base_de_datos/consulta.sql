@@ -59,10 +59,12 @@ WHERE o.order_id IS NULL;
 
 -- 2.C Órdenes sin ítems asociados
 SELECT COUNT(*) AS ordenes_sin_items
+
 FROM orders o
 LEFT JOIN order_items oi
     ON o.order_id = oi.order_id
 WHERE oi.order_id IS NULL;
+
 
 -- 2.D Órdenes sin historial de estado
 SELECT 
@@ -106,7 +108,7 @@ WHERE o.current_status = 'cancelled'
 ORDER BY o.order_datetime DESC
 LIMIT 12;
 
--- 4.B Detalle completo de un pedido específico
+-- 4.B Cabecera de un pedido específico
 SELECT
     o.order_id,
     o.order_datetime,
@@ -118,8 +120,56 @@ JOIN customers c
     ON o.customer_id = c.customer_id
 WHERE o.order_id = 26276;
 
+-- 4.C Ítems de un pedido específico
+SELECT
+    o.order_id,
+    oi.order_item_id,
+    p.product_id,
+    p.product_name,
+    p.category,
+    oi.quantity,
+    oi.unit_price,
+    oi.discount_rate,
+    oi.line_total
+FROM orders o
+JOIN order_items oi
+    ON o.order_id = oi.order_id
+JOIN products p
+    ON oi.product_id = p.product_id
+    WHERE o.order_id = 26276
+ORDER BY oi.order_item_id;
+
+-- 4.D Pagos de un pedido específico
+SELECT
+    o.order_id,
+    p.payment_id,
+    p.payment_datetime,
+    p.method,
+    p.amount,
+    p.currency,
+    p.payment_status
+FROM orders o
+JOIN payments p
+    ON o.order_id = p.order_id
+WHERE o.order_id = 26276 
+ORDER BY p.payment_datetime;
+
+-- 4.E Historial de estado de un pedido específico
+SELECT
+    o.order_id,
+    osh.status_history_id,
+    osh.status,
+    osh.changed_at,
+    osh.changed_by,
+    osh.reason
+FROM orders o
+JOIN order_status_history osh
+    ON o.order_id = osh.order_id
+WHERE o.order_id = 26276  
+ORDER BY osh.changed_at;
+
 /* 5. PRODUCTOS Y CATÁLOGO =============================== */
--- 5.A Productos sin movimiento comercial
+-- 5.A Productos nunca incluidos en ítems de orden
 SELECT
     p.product_id,
     p.product_name,
@@ -128,6 +178,21 @@ FROM products p
 LEFT JOIN order_items oi
     ON p.product_id = oi.product_id
 WHERE oi.product_id IS NULL;
+
+-- 5.B Productos sin ventas efectivas (órdenes pagadas, enviadas o entregadas)
+SELECT
+    p.product_id,
+    p.product_name,
+    p.category
+FROM products p
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM order_items oi
+    JOIN orders o
+        ON oi.order_id = o.order_id
+    WHERE oi.product_id = p.product_id
+        AND o.current_status IN ('paid', 'shipped', 'delivered')
+);
 
 /* 6. SEGUIMIENTO DE PAGOS====================== */
 
@@ -181,7 +246,9 @@ ORDER BY o.order_datetime DESC
 LIMIT 12;
 
 
--- 7.C Clientes sin órdenes
+/* 8. CLIENTES ==================================== */
+
+-- 8.A Clientes sin órdenes
 SELECT
     c.customer_id,
     c.full_name,
@@ -191,7 +258,7 @@ LEFT JOIN orders o
     ON c.customer_id = o.customer_id
 WHERE o.order_id IS NULL;
 
-/* 8. RESUMEN DE PROBLEMAS DE INTEGRIDAD====================== */
+/* 9. RESUMEN DE PROBLEMAS DE INTEGRIDAD====================== */
 
 SELECT 'Ordenes sin cliente' AS problema,
         COUNT(*) AS cantidad
@@ -232,4 +299,13 @@ SELECT 'Ordenes sin items',
 FROM orders o
 LEFT JOIN order_items oi
     ON o.order_id = oi.order_id
-WHERE oi.order_id IS NULL;
+WHERE oi.order_id IS NULL
+
+UNION ALL
+
+SELECT 'Ordenes sin historial',
+        COUNT(*)
+FROM orders o
+LEFT JOIN order_status_history osh
+    ON o.order_id = osh.order_id
+WHERE osh.status_history_id IS NULL;
