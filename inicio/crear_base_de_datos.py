@@ -4,7 +4,7 @@ from configuracion import RUTA_DB, RUTA_ESQUEMA, verificar_estructura, configura
 
 def crear_tablas(conn:sqlite3.Connection,schema_path:Path)->None:
     #"Ejecuta el script de sql del esquema"
-    with open(schema_path,"r",encoding="utf-8")as archivo:
+    with open(schema_path,"r",encoding="utf-8")as archivo:# r read solo lectura
         sql=archivo.read()
     conn.executescript(sql)
 
